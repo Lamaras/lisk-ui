@@ -12,6 +12,7 @@ angular.module('liskApp').controller('multisignatureModalController', ["$scope",
     }
     $scope.addingError = '';
     $scope.currentAddress = userService.address;
+    $scope.fee = 5;
 
     $scope.close = function () {
         if ($scope.destroy) {
@@ -89,8 +90,11 @@ angular.module('liskApp').controller('multisignatureModalController', ["$scope",
     $scope.putMembers = function (fromPass) {
         $scope.errorMessage = '';
         if (fromPass) {
-            if ($scope.authData.password.trim() == '' || ($scope.authData.secondPassphrase.trim() == '' && $scope.secondPassphrase)) {
-                $scope.errorMessage = "Missing passphrase or second passphrase";
+            if ($scope.authData.password.trim() == '') {
+                $scope.errorMessage = "Empty passphrase";
+                return;
+            } else if ($scope.authData.secondPassphrase.trim() == '' && $scope.secondPassphrase) {
+                $scope.errorMessage = "Empty second passphrase";
                 return;
             }
         } else {

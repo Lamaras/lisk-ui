@@ -16,13 +16,21 @@ angular.module('liskApp').controller('passphraseController', ['$scope', '$rootSc
     }
 
     $scope.login = function (pass, remember) {
-        if (pass.length>100) {
+        if (pass.trim().split(/\s+/g).length < 12) {
+            $scope.errorMessage = 'Passphrase must consist of 12 or more words.';
+            return;
+        }
+        if (pass.length > 100) {
             $scope.errorMessage = 'Passphrase must contain less than 100 characters.';
             return;
         }
-        var data = {secret: pass};
+        if (!Mnemonic.isValid(pass)) {
+            $scope.errorMessage = 'Passphrase must be a valid BIP39 mnemonic code.';
+            return;
+        }
+        var data = { secret: pass };
         $scope.errorMessage = "";
-        $http.post("/api/accounts/open/", {secret: pass})
+        $http.post("/api/accounts/open/", { secret: pass })
             .then(function (resp) {
                 if (resp.data.success) {
                     userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);

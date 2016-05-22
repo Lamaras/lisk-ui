@@ -1,7 +1,7 @@
 <div class="row clearfix">
     <div class="col-xs-12">
         <div class="dapp-info clearfix">
-            <div class="cover-container"><img ng-if="!dapp.icon" class="cover-image" src="https://placeholdit.imgix.net/~text?txtsize=33&txt=208%C3%97208&w=208&h=208">
+            <div class="cover-container"><img ng-if="!dapp.icon" class="cover-image" src="images/dappIcon.png">
                 <img ng-if="dapp.icon" class="cover-image" ng-src="{{dapp.icon}}">
             </div>
             <div class="info-container">
@@ -13,7 +13,7 @@
                     <!-- <div class="document-subtitle">25 Mar 2015</div> -->
                 </div>
                 <div class="details-info-divider"></div>
-                <div ng-show="!loading && !installed && !isInstalling() && !isRemoving() && !isLaunched()" class="details-actions">
+                <div ng-show="!loading && !installed && !isInstalling() && !isUninstalling() && !isLaunched()" class="details-actions">
                     <div>
                         <a class="btn btn-sky-blue waves-effect waves-light" ng-click="installDapp()" ng-switch on="dapp.type">
                             <i class="mdi-file-file-download left"></i>
@@ -24,7 +24,7 @@
                     <!-- <a class="btn btn-white waves-effect left-margin-14">SHARE</a> -->
                     <a ng-show="dapp.link" href="{{dapp.link}}" target="_blank" class="btn btn-white waves-effect pull-right source"><translate>SOURCE CODE</translate></a>
                 </div>
-                <div ng-show="!loading && installed && !isInstalling() && !isRemoving() && !isLaunched()" class="details-actions">
+                <div ng-show="!loading && installed && !isInstalling() && !isUninstalling() && !isLaunched()" class="details-actions">
                     <a class="btn btn-sky-blue waves-effect waves-light" ng-click="runDApp()" ng-switch on="dapp.type">
                         <i class="mdi-file-file-download left"></i>
                         <span ng-switch-default><translate>LAUNCH</translate></span>
@@ -33,7 +33,7 @@
                     <!-- <a class="btn btn-white waves-effect left-margin-14">SHARE</a> -->
                     <a ng-show="dapp.git" href="{{dapp.githublink}}" target="_blank" class="btn btn-white waves-effect pull-right source"><translate>SOURCE CODE</translate></a>
                 </div>
-                <div ng-show="!isInstalling() && !isRemoving() && isLaunched()" class="details-actions">
+                <div ng-show="!isInstalling() && !isUninstalling() && isLaunched()" class="details-actions">
                     <a class="btn btn-sky-blue waves-effect waves-light" ng-click="openDapp(dapp.type)" ng-switch on="dapp.type">
                         <i class="mdi-file-file-download left"></i>
                         <span ng-switch-default><translate>OPEN</translate></span>
@@ -42,7 +42,7 @@
                     <!-- <a class="btn btn-white waves-effect left-margin-14">SHARE</a> -->
                     <a ng-show="dapp.git" href="{{dapp.githublink}}" target="_blank" class="btn btn-white waves-effect pull-right source"><translate>SOURCE CODE</translate></a>
                 </div>
-                <div ng-show="(isInstalling() || isRemoving()) && !isLaunched()" class="details-actions">
+                <div ng-show="(isInstalling() || isUninstalling()) && !isLaunched()" class="details-actions">
                     <div class="progress" style="display: inline-block; width: 120px;">
                         <div class="indeterminate"></div>
                     </div>
@@ -64,7 +64,7 @@
                     </a>
                 </div>
                 <div class="details-info-divider"></div>
-                <div class="reason-set">
+                <!-- <div class="reason-set">
                     <span class="stars-container">
                         <div class="reason-set-star-rating">
                             <div class="small-star star-rating-non-editable-container" aria-label="Average Rating: 4.3 out of 5">
@@ -73,7 +73,7 @@
                             <div class="stars-count"><translate>(1449)</translate></div>
                         </div>
                     </span>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>

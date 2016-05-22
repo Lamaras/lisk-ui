@@ -2,8 +2,8 @@ require('angular');
 
 angular.module('liskApp').controller('newUserController', ["$scope", "$http", "newUser", "userService", "$state", "viewFactory", 'gettextCatalog', function ($scope, $http, newUser, userService, $state, viewFactory, gettextCatalog) {
 
+    $scope.step = 1;
     $scope.noMatch = false;
-    $scope.firstStep = true;
     $scope.view = viewFactory;
     $scope.view.loadingText = gettextCatalog.getString('Registering user');
     $scope.view.inLoading = false;
@@ -13,31 +13,30 @@ angular.module('liskApp').controller('newUserController', ["$scope", "$http", "n
     }
 
     $scope.generatePassphrase = function () {
-        var Mnemonic = require('bitcore-mnemonic');
         var code = new Mnemonic(Mnemonic.Words.ENGLISH);
         $scope.newPassphrase = code.toString();
     };
 
-    $scope.step = function () {
-        if ($scope.firstStep) {
-            $scope.passToCheck = $scope.newPassphrase;
+    $scope.goToStep = function (step) {
+        if (step == 1) {
+            $scope.repeatPassphrase = '';
+            $scope.noMatch = false;
         }
-        $scope.firstStep = !$scope.firstStep;
+        $scope.step = step;
     }
 
     $scope.savePassToFile = function (pass) {
-        var blob = new Blob([pass], {type: "text/plain;charset=utf-8"});
-        FS.saveAs(blob, "liskPassphrase.txt");
+        var blob = new Blob([pass], { type: "text/plain;charset=utf-8" });
+        FS.saveAs(blob, "LiskPassphrase.txt");
     }
 
     $scope.login = function (pass) {
-        $scope.noMatch = false;
-        var data = {secret: pass};
-        if ($scope.passToCheck != pass) {
+        var data = { secret: pass };
+        if (!Mnemonic.isValid(pass) || $scope.newPassphrase != pass) {
             $scope.noMatch = true;
         } else {
             $scope.view.inLoading = true;
-            $http.post("/api/accounts/open/", {secret: pass})
+            $http.post("/api/accounts/open/", { secret: pass })
                 .then(function (resp) {
                     $scope.view.inLoading = false;
                     if (resp.data.success) {
@@ -48,7 +47,7 @@ angular.module('liskApp').controller('newUserController', ["$scope", "$http", "n
                         userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
                         $state.go('main.dashboard');
                     } else {
-                        alert("Something wrong. Restart server please.");
+                        console.error("Login failed. Failed to open account.");
                     }
                 });
         }

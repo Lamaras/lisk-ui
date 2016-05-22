@@ -1,17 +1,18 @@
 require('angular');
 
-angular.module('liskApp').controller('sendTransactionController', ["$scope", "sendTransactionModal", "$http", "userService", "$timeout", "$filter", function ($scope, sendTransactionModal, $http, userService, $timeout, $filter) {
+angular.module('liskApp').controller('sendTransactionController', ['$scope', 'sendTransactionModal', '$http', 'userService', '$timeout', '$filter', function ($scope, sendTransactionModal, $http, userService, $timeout, $filter) {
 
     $scope.sending = false;
     $scope.passmode = false;
     $scope.accountValid = true;
-    $scope.errorMessage = "";
+    $scope.errorMessage = {};
     $scope.checkSecondPass = false;
     $scope.onlyNumbers = /^-?\d*(\.\d+)?$/;
     $scope.secondPassphrase = userService.secondPassphrase;
     $scope.address = userService.address;
     $scope.focus = $scope.to ? 'amount' : 'to';
     $scope.presendError = false;
+    $scope.fee = 0;
 
     $scope.submit = function () {
         console.log('Transaction sent');
@@ -42,6 +43,29 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
         return number.roundTo(digitsCount).valueOf();
     }
 
+    function validateForm (onValid) {
+        var isAddress = /^[0-9]+[L|l]$/g;
+        var correctAddress = isAddress.test($scope.to);
+
+        $scope.errorMessage = {};
+
+        if ($scope.to.trim() == '') {
+            $scope.errorMessage.recipient = 'Empty recipient';
+            $scope.presendError = true;
+        } else {
+            if (correctAddress) {
+                if ($scope.isCorrectValue($scope.amount)) {
+                    return onValid();
+                } else {
+                    $scope.presendError = true;
+                }
+            } else {
+                $scope.errorMessage.recipient = 'Invalid recipient';
+                $scope.presendError = true;
+            }
+        }
+    }
+
     $scope.passcheck = function (fromSecondPass) {
         if (fromSecondPass) {
             $scope.checkSecondPass = false;
@@ -54,49 +78,19 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
             return;
         }
         if ($scope.rememberedPassphrase) {
-            var isAddress = /^[0-9]+[L|l]$/g;
-            var allowSymbols = /^[a-z0-9!@$&_.]+$/g;
-            var correctAddress = isAddress.test($scope.to);
-            if ($scope.to.trim() == '') {
-                $scope.errorMessage = 'Empty recipient'
-                $scope.presendError = true;
-            } else {
-                if (correctAddress || allowSymbols.test($scope.to.toLowerCase())) {
-                    if ($scope.isCorrectValue($scope.amount)) {
-                        $scope.presendError = false;
-                        $scope.errorMessage = ''
-                        $scope.sendTransaction($scope.rememberedPassphrase);
-                    } else {
-                        $scope.presendError = true;
-                    }
-                } else {
-                    $scope.errorMessage = 'Incorrect recipient address'
-                    $scope.presendError = true;
-                }
-            }
+            validateForm(function () {
+                $scope.presendError = false;
+                $scope.errorMessage = {};
+                $scope.sendTransaction($scope.rememberedPassphrase);
+            });
         } else {
-            var isAddress = /^[0-9]+[L|l]$/g;
-            var allowSymbols = /^[a-z0-9!@$&_.]+$/g;
-            var correctAddress = isAddress.test($scope.to);
-            if ($scope.to.trim() == '') {
-                $scope.errorMessage = 'Empty recipient'
-                $scope.presendError = true;
-            } else {
-                if (correctAddress || allowSymbols.test($scope.to.toLowerCase())) {
-                    if ($scope.isCorrectValue($scope.amount)) {
-                        $scope.presendError = false;
-                        $scope.errorMessage = ''
-                        $scope.passmode = !$scope.passmode;
-                        $scope.focus = 'secretPhrase';
-                        $scope.secretPhrase = '';
-                    } else {
-                        $scope.presendError = true;
-                    }
-                } else {
-                    $scope.errorMessage = 'Incorrect recipient address'
-                    $scope.presendError = true;
-                }
-            }
+            validateForm(function () {
+                $scope.presendError = false;
+                $scope.errorMessage = {};
+                $scope.passmode = !$scope.passmode;
+                $scope.focus = 'secretPhrase';
+                $scope.secretPhrase = '';
+            });
         }
     }
 
@@ -105,41 +99,6 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
             $scope.destroy();
         }
         sendTransactionModal.deactivate();
-    }
-
-    $scope.moreThanEightDigits = function (number) {
-        if (number.indexOf(".") < 0) {
-            return false;
-        } else {
-            if (number.split('.')[1].length > 8) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    $scope.recalculateFee = function ($event) {
-        if (!$scope.amount || isNaN(parseFloat($scope.amount))) {
-            $scope.fee = "";
-        } else {
-            if ($scope.amount.indexOf('.') >= 0) {
-                var strs = $scope.amount.split('.');
-                $scope.maxlength = strs[0].length + 9;
-            }
-
-            // Calculate fee
-            var fee = parseInt($scope.amount * 100000000 / 100 * $scope.currentFee) / 100000000;
-
-            if ($scope.amount == 0) {
-                fee = 0;
-            } else if (parseFloat(fee) == 0) {
-                fee = "0.00000001";
-                $scope.fee = fee;
-            } else {
-                $scope.fee = fee.toFixed(8);
-            }
-        }
     }
 
     $scope.accountChanged = function (e) {
@@ -161,35 +120,38 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
         }
     }
 
-    $scope.moreThanEightDigits = function (number) {
-        if (number.toString().indexOf(".") < 0) {
-            return false;
-        } else {
-            if (number.toString().split('.')[1].length > 8) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
     $scope.getCurrentFee = function () {
-        $http.get("/api/blocks/getFee")
-            .then(function (resp) {
+        $http.get('/api/blocks/getFee').then(function (resp) {
                 $scope.currentFee = resp.data.fee;
+                $scope.fee = resp.data.fee;
             });
     }
 
-    $scope.convertLISK = function (currency) {
+    $scope.isCorrectValue = function (currency, throwError) {
         currency = String(currency);
 
-        var parts = currency.split(".");
-
+        var parts = currency.trim().split('.');
         var amount = parts[0];
+
+        if (!throwError) throwError = false;
+
+        function error () {
+            $scope.errorMessage.amount = 'Invalid LSK amount';
+
+            if (throwError) {
+              throw $scope.errorMessage.amount;
+            } else {
+              return false;
+            }
+        }
+
+        if (amount == '' || amount == '0') {
+            return error();
+        }
 
         // No fractional part
         if (parts.length == 1) {
-            var fraction = "00000000";
+            var fraction = '00000000';
         } else if (parts.length == 2) {
             if (parts[1].length <= 8) {
                 var fraction = parts[1];
@@ -197,66 +159,28 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
                 var fraction = parts[1].substring(0, 8);
             }
         } else {
-            $scope.errorMessage = "Wrong LISK value";
-            throw "Invalid input";
+            return error();
         }
 
         for (var i = fraction.length; i < 8; i++) {
-            fraction += "0";
+            fraction += '0';
         }
 
-        var result = amount + "" + fraction;
+        var result = amount + '' + fraction;
 
         // In case there's a comma or something else in there. At this point there should only be numbers.
         if (!/^\d+$/.test(result)) {
-            $scope.errorMessage = "Wrong LISK value";
-            throw "Invalid input.";
+            return error();
         }
 
         // Remove leading zeroes
-        result = result.replace(/^0+/, "");
-
-        if (result === "") {
-            result = "0";
-        }
+        result = result.replace(/^0+/, '');
 
         return parseInt(result);
     }
 
-    $scope.isCorrectValue = function (currency) {
-        currency = String(currency);
-
-        var parts = currency.split(".");
-
-        var amount = parts[0];
-
-        // No fractional part
-        if (parts.length == 1) {
-            var fraction = "00000000";
-        } else if (parts.length == 2) {
-            if (parts[1].length <= 8) {
-                var fraction = parts[1];
-            } else {
-                var fraction = parts[1].substring(0, 8);
-            }
-        } else {
-            $scope.errorMessage = "Wrong LISK value";
-            return false;
-        }
-
-        for (var i = fraction.length; i < 8; i++) {
-            fraction += "0";
-        }
-
-        var result = amount + "" + fraction;
-
-        // In case there's a comma or something else in there. At this point there should only be numbers.
-        if (!/^\d+$/.test(result)) {
-            $scope.errorMessage = "Wrong LISK value";
-         return false;
-        }
-
-        return true;
+    $scope.convertLISK = function (currency) {
+        return $scope.isCorrectValue(currency, true);
     }
 
     $scope.clearRecipient = function () {
@@ -269,15 +193,13 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
             $scope.focus = 'secondPhrase';
             return;
         }
-        $scope.errorMessage = "";
-        if (($scope.amount + '').indexOf('.') != -1) {
-            $scope.lengthError = $scope.amount.split('.')[1].length > 8;
-            $scope.errorMessage = $scope.lengthError ? "More than 8 numbers in decimal part" : '';
-        }
 
-        if ($scope.lengthError) {
+        if (($scope.amount + '').indexOf('.') != -1 && $scope.amount.split('.')[1].length > 8) {
+            $scope.errorMessage.amount = 'LSK amount must not have more than 8 decimal places';
             return;
         }
+
+        $scope.errorMessage = {};
 
         var data = {
             secret: secretPhrase,
@@ -293,12 +215,12 @@ angular.module('liskApp').controller('sendTransactionController', ["$scope", "se
             }
         }
 
-        if (!$scope.lengthError && !$scope.sending) {
+        if (!$scope.sending) {
             $scope.sending = true;
-            $http.put("/api/transactions", data).then(function (resp) {
+            $http.put('/api/transactions', data).then(function (resp) {
                 $scope.sending = false;
                 if (resp.data.error) {
-                    $scope.errorMessage = resp.data.error;
+                    $scope.errorMessage.fromServer = resp.data.error;
                 } else {
                     if ($scope.destroy) {
                         $scope.destroy();

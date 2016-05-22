@@ -3,8 +3,8 @@
         <div class="panel  panel-default no-margin-bottom">
             <div class="panel-body empty-body ng-scope">
                 <div class="logo-grey"></div>
-                <p ng-if="!searchedTextString.length" class="empty-state-text">{{'No dapps matching your search criteria were found.'|translate}}</translate></p>
-                <p ng-if="!!searchedTextString.length" class="empty-state-text">{{'No dapps matching your search criteria were found.'|translate}}</p>
+                <p ng-if="!searchedTextString.length" class="empty-state-text">{{'No applications matching your search criteria were found.'|translate}}</translate></p>
+                <p ng-if="!!searchedTextString.length" class="empty-state-text">{{'No applications matching your search criteria were found.'|translate}}</p>
             </div>
         </div>
     </div>
@@ -24,7 +24,7 @@
             <div class="cover">
                 <div class="cover-image-container">
                     <div class="cover-outer-align">
-                        <div class="cover-inner-align"><img ng-if="!dapp.icon" class="cover-image" src="https://placeholdit.imgix.net/~text?txtsize=33&txt=208%C3%97208&w=208&h=208">
+                        <div class="cover-inner-align"><img ng-if="!dapp.icon" class="cover-image" src="images/dappIcon.png">
                             <img ng-if="dapp.icon" class="cover-image" ng-src="{{dapp.icon}}">
                         </div>
                     </div>
@@ -34,11 +34,11 @@
                 <h2>
                     <span class="title" href="#">{{dapp.name}}</span>
                 </h2>
-                <div class="subtitle-container">
+                <!--<div class="subtitle-container">
                     <span class="subtitle">{{dapp.nikname}}</span>
-                </div>
+                </div>-->
             </div>
-            <div class="reason-set">
+            <!--<div class="reason-set">
                 <span class="stars-container">
                     <div class="reason-set-star-rating">
                         <div class="small-star star-rating-non-editable-container" aria-label="Average Rating: 4.3 out of 5">
@@ -58,7 +58,7 @@
                         </span>
                     </span>
                 </span>
-            </div>
+            </div>-->
             <a ng-if="dapp.type==1" class="target-link" target-blank ng-href="{{dapp.link}}"></a>
             <a ng-if="dapp.type!=1" class="target-link" href="#" ui-sref='main.dappentry({"dappId":"{{dapp.transactionId}}"})'></a>
         </div>

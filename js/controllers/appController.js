@@ -118,7 +118,7 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
         $http.get("/api/peers/version").then(function (response) {
             if (response.data.success) {
                 $scope.version = response.data.version;
-                $http.get("https://login.lisk.io/api/peers/version").then(function (response) {
+                $http.get("https://testnet.lisk.io/api/peers/version").then(function (response) {
                     $scope.latest = response.data.version;
                     $scope.diffVersion = compareVersion($scope.version, $scope.latest);
                 });
@@ -138,6 +138,23 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
         $scope.searchBlocks.searchForBlock = '';
     }
 
+    $scope.resetAppData = function () {
+        $scope.balance = userService.balance = 0;
+        $scope.unconfirmedBalance = userService.unconfirmedBalance = 0;
+
+        $scope.secondPassphrase = userService.secondPassphrase = 0;
+        $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase = 0;
+
+        userService.multisignatures = userService.u_multisignatures = null;
+        $scope.multisignature = false;
+
+        $scope.delegateInRegistration = userService.delegateInRegistration = null;
+        $scope.delegate = userService.delegate = null;
+        $scope.username = userService.username = null;
+    }
+
+    $scope.resetAppData();
+
     $scope.getAppData = function () {
         $http.get("/api/accounts", {params: {address: userService.address}})
             .then(function (resp) {
@@ -155,11 +172,13 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
                     userService.secondPassphrase = account.secondSignature || account.unconfirmedSignature;
                     userService.unconfirmedPassphrase = account.unconfirmedSignature;
                 }
+
                 $scope.balance = userService.balance;
                 $scope.unconfirmedBalance = userService.unconfirmedBalance;
                 $scope.secondPassphrase = userService.secondPassphrase;
                 $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
                 $scope.delegateInRegistration = userService.delegateInRegistration;
+
                 if ($state.current.name != 'passphrase') {
                     $scope.getMultisignatureAccounts(function (multisignature) {
                         $scope.multisignature = userService.u_multisignatures.length || userService.multisignatures.length
@@ -171,14 +190,15 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
                     $scope.getForging($scope.setForgingText);
                     $scope.getDelegate();
                 }
+
                 if ($state.current.name == 'main.forging' || $state.current.name == 'main.votes' || $state.current.name == 'main.delegates') {
                     $scope.getMyVotesCount();
                     $scope.getForging($scope.setForgingText);
                 }
+
                 if ($state.current.name == 'main.dappstore' || 'main.dashboard') {
                     $scope.getCategories();
                 }
-
             });
     };
 
@@ -230,8 +250,6 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
                         })
                     }
                 });
-
-
         } else {
             $scope.forgingModal = forgingModal.activate({
                 forging: false,
@@ -270,8 +288,6 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
                             }
                         })
                     }
-
-
                 });
         } else {
             $scope.forgingModal = forgingModal.activate({
@@ -340,7 +356,6 @@ angular.module('liskApp').controller('appController', ['dappsService', '$scope',
                                     return userService.setMultisignature(false, cb);
                                 }
                             });
-
                     }
                 } else {
                     return userService.setMultisignature(false, cb);
